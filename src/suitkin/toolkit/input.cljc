@@ -248,24 +248,30 @@
                   {:class [input-class (class-names (:input-class props))]})]
    [right-input-area text-right icon-right]])
 
-(defn input
+(defn input-with-label
   [{:keys [label label-required tooltip
            icon-left icon-right
-           description text-left text-right] :as props}]
-  [:div {:class [description-wrapper-class]}
-   [:div {:class [label-wrapper-class]}
-    [lable-area label label-required tooltip]
-    [:div {:class [(or (:base-class props) base-class)
-                   (when (:disabled props) disabled-class)
-                   (class-names (:class props))]}
-     (:prefix props)
-     [input-with-text-area props text-left
-      text-right icon-left icon-right]
-     (when (:suffix props)
-       [:div {:class (c :absolute :h-full [:right 0] :flex :items-center :justify-center
-                        {:border-left "1px solid #DADCE0"})}
-        (:suffix props)])]]
-   [description-area description]])
+           text-left text-right] :as props}]
+  [:div {:class [label-wrapper-class]}
+   [lable-area label label-required tooltip]
+   [:div {:class [(or (:base-class props) base-class)
+                  (when (:disabled props) disabled-class)
+                  (class-names (:class props))]}
+    (:prefix props)
+    [input-with-text-area props text-left
+     text-right icon-left icon-right]
+    (when (:suffix props)
+      [:div {:class (c :absolute :h-full [:right 0] :flex :items-center :justify-center
+                       {:border-left "1px solid #DADCE0"})}
+       (:suffix props)])]])
+
+(defn input [props]
+  (let [labeled-input [input-with-label props]]
+    (if-let [description (:description props)]
+      [:div {:class [description-wrapper-class]}
+       labeled-input
+       [description-area description]]
+      labeled-input)))
 
 (defn zf-input
   [props]
