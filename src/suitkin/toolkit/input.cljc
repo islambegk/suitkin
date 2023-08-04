@@ -345,18 +345,30 @@
      (dissoc props :opts :float :forbid-negative)
      (when-let [o (:opts props)]
        (let [value @(rf/subscribe [:zf/value o])]
-         {:value value
-          :type      "date"
-          :on-change (fn [e]
-                       (zf/dispatch-sync [:zf.form/set-value (assoc o
-                                                                    :value (some-> (.. e -target -value))
-                                                                    :auto-commit false)]))
-          :on-blur   #(do (zf/dispatch [:zf/commit-value o])
-                          (zf/dispatch [:zf/blur o]))
-          :on-focus  #(zf/dispatch [:zf/focus o])
-          :on-wheel
-          (fn [e]
-            (.blur (.-currentTarget e)))})))])
+         (cond-> {:value value
+                  :type      "date"
+                  :on-change (fn [e]
+                               (zf/dispatch-sync [:zf.form/set-value (assoc o
+                                                                            :value (some-> (.. e -target -value))
+                                                                            :auto-commit false)]))
+                  :on-blur   #(do (zf/dispatch [:zf/commit-value o])
+                                  (zf/dispatch [:zf/blur o]))
+                  :on-focus  #(zf/dispatch [:zf/focus o])
+                  :on-wheel
+                  (fn [e]
+                    (.blur (.-currentTarget e)))}
+
+           (:placeholder props)
+           (-> (assoc :type "text")
+               (update :on-focus (fn [handler]
+                                   (fn [& args]
+                                     #?(:cljs (this-as this
+                                                (let [e (first args)]
+                                                  (set! (.. e -target -type) "date"))))
+                                     (handler args))))
+               (assoc :on-blur #?(:cljs #(this-as this
+                                           (let [e %]
+                                             (set! (.. e -target -type) "text"))))))))))])
 
 
 (defn zf-date [props]
